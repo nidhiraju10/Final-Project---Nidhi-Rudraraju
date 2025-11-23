@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <h2>New Trip</h2>
+
+  <form method="post">
+    <p>
+      <label>Start place:<br>
+        <input type="text" name="start_place" required>
+      </label>
+    </p>
+
+    <p>
+      <label>End place:<br>
+        <input type="text" name="end_place" required>
+      </label>
+    </p>
+
+    <p>
+      <label>Start time:<br>
+        <input type="datetime-local" name="start_time">
+      </label>
+    </p>
+
+    <p>
+      <label>End time:<br>
+        <input type="datetime-local" name="end_time">
+      </label>
+    </p>
+
+    <p>
+      <label>Journal entry:<br>
+        <textarea name="description" rows="5" cols="40"></textarea>
+      </label>
+    </p>
+
+    <button type="submit">Save</button>
+  </form>
+{% endblock %}

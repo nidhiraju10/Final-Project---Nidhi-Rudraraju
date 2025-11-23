@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block content %}
+  <p><a href="/new">Add a new trip</a></p>
+
+  {% if trips %}
+    <ul>
+      {% for t in trips %}
+        <li>
+          <strong>{{ t['start_place'] }} → {{ t['end_place'] }}</strong><br>
+          Start: {{ t['start_time'] or 'N/A' }}<br>
+          End: {{ t['end_time'] or 'N/A' }}<br>
+          {% if t['description'] %}
+            Journal: {{ t['description'] }}
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No trips yet.</p>
+  {% endif %}
+{% endblock %}
