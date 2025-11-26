@@ -1,18 +1,44 @@
 from flask import Flask, render_template, request, redirect
-from helpers import get_db, init_db
+import csv
+import os
 
 app = Flask(__name__)
-init_db()
+
+CSV_FILE = "trips.csv"
+
+
+def init_csv():
+    if not os.path.exists(CSV_FILE):
+        with open(CSV_FILE, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["id", "start_place", "end_place", "start_time", "end_time", "description"])
+
+
+def read_trips():
+    trips = []
+    if not os.path.exists(CSV_FILE):
+        return trips
+    with open(CSV_FILE, "r", newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            trips.append(row)
+    return trips
+
+
+def add_trip(start_place, end_place, start_time, end_time, description):
+    trips = read_trips()
+    new_id = len(trips) + 1
+    with open(CSV_FILE, "a", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([new_id, start_place, end_place, start_time, end_time, description])
+
 
 @app.route("/")
 def index():
-    print(">>> index() was called")
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT * FROM trips ORDER BY id DESC")
-    trips = cur.fetchall()
-    conn.close()
+    print(">>> index() called")   # debug print
+    trips = read_trips()
     return render_template("index.html", trips=trips)
+
 
 @app.route("/new", methods=["GET", "POST"])
 def new_trip():
@@ -23,18 +49,12 @@ def new_trip():
         end_time = request.form.get("end_time")
         description = request.form.get("description")
 
-        conn = get_db()
-        cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO trips (start_place, end_place, start_time, end_time, description) VALUES (?, ?, ?, ?, ?)",
-            (start_place, end_place, start_time, end_time, description)
-        )
-        conn.commit()
-        conn.close()
-
+        add_trip(start_place, end_place, start_time, end_time, description)
         return redirect("/")
 
     return render_template("new_trip.html")
 
+
 if __name__ == "__main__":
+    init_csv()
     app.run(debug=True)
