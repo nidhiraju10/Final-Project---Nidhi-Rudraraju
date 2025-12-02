@@ -1,28 +1,30 @@
 {% extends "layout.html" %}
 
 {% block content %}
-  <h2>Compass Notes</h2>
-  <p><em>Your personal journal for every trip — remember every trail, every moment.</em></p>
-  <p>Log your journeys, reflect on how you felt, and build your own map of memories.</p>
 
-  <hr>
+<div style="text-align: center; max-width: 600px; margin: 0 auto;">
+  <p><em>Your personal journal for every run </em></p>
+  <p>Log your journeys, reflect on your thoughts, and build your memories.</p>
+</div>
+<hr>
 
-  <p><a href="/new">Add a new trip</a></p>
+<p><a href="/new">Add a new Run</a></p>
 
-  {% if trips %}
-    <ul>
-      {% for t in trips %}
-        <li>
-          <strong>{{ t['start_place'] }} → {{ t['end_place'] }}</strong><br>
-          Start: {{ t['start_time'] or 'N/A' }}<br>
-          End: {{ t['end_time'] or 'N/A' }}<br>
-          {% if t['description'] %}
-            Journal: {{ t['description'] }}
-          {% endif %}
-        </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p>No trips yet.</p>
-  {% endif %}
+{% if trips %}
+  <ul>
+    {% for t in trips %}
+      <li>
+        <strong>{{ t['start_place'] }} → {{ t['end_place'] }}</strong><br>
+        Start: {{ t['start_time'] or 'N/A' }}<br>
+        End: {{ t['end_time'] or 'N/A' }}<br>
+        {% if t['description'] %}
+          Journal: {{ t['description'] }}
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>No trips yet.</p>
+{% endif %}
+
 {% endblock %}
