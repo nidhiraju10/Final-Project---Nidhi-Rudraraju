@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect
 import csv
 import os
 import urllib
+import json
 
 from dotenv import load_dotenv
 
@@ -14,7 +15,6 @@ CSV_FILE = "trips.csv"
 
 
 def init_csv():
-    # Create CSV file if missing
     if not os.path.exists(CSV_FILE):
         with open(CSV_FILE, "w", newline="") as f:
             writer = csv.writer(f)
@@ -51,30 +51,38 @@ def add_trip(start_place, end_place, start_time, end_time, description):
         
         writer.writerow([start_place, end_place, start_time, end_time, description])
 
-def geocode(place_name):
-    """Use Mapbox to turn a place string into (lat, lon)."""
-    if not MAPBOX_TOKEN or not place_name:
+def geocode(place):
+    """
+    Converts a place name string into (latitude, longitude) coordinates
+    using the Mapbox Geocoding API.
+    """
+    if not MAPBOX_TOKEN:
+        print("Error: MAPBOX_TOKEN not set.")
         return None, None
 
-    encoded = urllib.parse.quote(place_name)
+    # URL-encode the place name for the API query
+    query = urllib.parse.quote(place)
+
     url = (
-        f"https://api.mapbox.com/geocoding/v5/mapbox.places/"
-        f"{encoded}.json?access_token={MAPBOX_TOKEN}"
+        "https://api.mapbox.com/geocoding/v5/mapbox.places/"
+        f"{query}.json?access_token={MAPBOX_TOKEN}&limit=1"
     )
 
     try:
-        resp = requests.get(url)
-        data = resp.json()
-    except Exception:
+        with urllib.request.urlopen(url) as response:
+            data = json.loads(response.read().decode())
+            
+            # Check if features were returned
+            if data["features"]:
+                # Mapbox returns coordinates as [longitude, latitude]
+                lon, lat = data["features"][0]["center"]
+                return lat, lon
+            else:
+                print(f"Warning: Could not geocode place: {place}")
+                return None, None
+    except Exception as e:
+        print(f"Error during geocoding for {place}: {e}")
         return None, None
-
-    features = data.get("features", [])
-    if not features:
-        return None, None
-
-    lon, lat = features[0]["center"]
-    return lat, lon
-
 
 def generate_mapbox_map(start_place, end_place):
     """Build a Mapbox Static Maps URL with pins + line between start and end."""
@@ -90,7 +98,7 @@ def generate_mapbox_map(start_place, end_place):
 
     # Path (red line) + blue 'S' pin at start, orange 'E' pin at end
     overlays = (
-        f"path-4+ff0000({start_lon},{start_lat};{end_lon},{end_lat}),"
+        # f"path-4+ff0000({start_lon},{start_lat};{end_lon},{end_lat}),"
         f"pin-l-s+285A98({start_lon},{start_lat}),"
         f"pin-l-e+ff7f0e({end_lon},{end_lat})"
     )
