@@ -1,7 +1,11 @@
 {% extends "layout.html" %}
 
 {% block content %}
-
+<div style="text-align: center; max-width: 600px; margin: 0 auto;">
+  <p><em>Your personal journal for every run </em></p>
+  <p>Log your journeys, reflect on your thoughts, and build your memories.</p>
+</div>
+<hr>
 <p><a href="/new">Add a new trip</a></p>
 
 {% if trips %}
@@ -14,12 +18,17 @@
         {% if t['description'] %}
           Journal: {{ t['description'] }}
         {% endif %}
+        <br>
+        {% if t['distance_km'] %}
+          Distance: {{ t['distance_km'] }} km<br>
+        {% endif %}
           {% if t['map_url'] %}
             <br>
             <img src="{{ t['map_url'] }}"
                 alt="Route map"
                 style="margin-top: 8px; border-radius: 8px;">
           {% endif %}
+
       </li>
 
     {% endfor %}

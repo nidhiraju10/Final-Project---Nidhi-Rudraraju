@@ -3,6 +3,7 @@ import csv
 import os
 import urllib
 import json
+import math
 
 from dotenv import load_dotenv
 
@@ -34,6 +35,14 @@ def read_trips():
                 row.get("start_place", ""),
                 row.get("end_place", "")
             )
+            lat1, lon1 = geocode(row.get("start_place", ""))
+            lat2, lon2 = geocode(row.get("end_place", ""))
+
+            if None not in (lat1, lon1, lat2, lon2):
+                row["distance_km"] = calculate_distance(lat1, lon1, lat2, lon2)
+            else:
+                row["distance_km"] = None
+
             trips.append(row)
 
     return trips
@@ -84,6 +93,25 @@ def geocode(place):
         print(f"Error during geocoding for {place}: {e}")
         return None, None
 
+def calculate_distance(lat1, lon1, lat2, lon2):
+    """Return distance in kilometers between two lat/lon points."""
+    R = 6371  # Earth's radius in km
+
+    lat1_r = math.radians(lat1)
+    lat2_r = math.radians(lat2)
+    lon1_r = math.radians(lon1)
+    lon2_r = math.radians(lon2)
+
+    dlat = lat2_r - lat1_r
+    dlon = lon2_r - lon1_r
+
+    a = math.sin(dlat/2)**2 + math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon/2)**2
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    distance_km = R * c
+    return round(distance_km, 2)
+
+
 def generate_mapbox_map(start_place, end_place):
     """Build a Mapbox Static Maps URL with pins + line between start and end."""
     if not MAPBOX_TOKEN:
@@ -92,11 +120,9 @@ def generate_mapbox_map(start_place, end_place):
     start_lat, start_lon = geocode(start_place)
     end_lat, end_lon = geocode(end_place)
 
-    # If we can't geocode either, skip the map
     if None in (start_lat, start_lon, end_lat, end_lon):
         return None
 
-    # Path (red line) + blue 'S' pin at start, orange 'E' pin at end
     overlays = (
         # f"path-4+ff0000({start_lon},{start_lat};{end_lon},{end_lat}),"
         f"pin-l-s+285A98({start_lon},{start_lat}),"
